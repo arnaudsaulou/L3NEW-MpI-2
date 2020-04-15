@@ -5,12 +5,13 @@ public class Main {
     //region Variables
     private static Scanner keyboard;
     private static FileManager fileManager;
-    private static Automaton automaton;
+    private static AutomatonManager automatonManager;
     //endregion
 
     //region Constructor
     public static void main(String[] args) {
         fileManager = new FileManager();
+        automatonManager = new AutomatonManager(fileManager);
         keyboard = new Scanner(System.in);
         processingLoop();
     }
@@ -23,20 +24,32 @@ public class Main {
         do {
             printMainMenu();
             answers = keyboard.nextLine();
-
-            if (answers.equals("1")) {
-                printAutomatonSelectionMenu();
-                fileManager.loadFile(keyboard.nextLine(),automaton);
-            }
-
-        } while (!answers.equals("2"));
+            handleUserChoice(answers);
+        } while (!answers.equals("3"));
     }
+
+    private static void handleUserChoice(String answers) {
+
+        switch (answers){
+            case "1":
+                printAutomatonSelectionMenu();
+                automatonManager.chooseAutomaton(keyboard.nextLine());
+                break;
+            case "2":
+                automatonManager.printAutomaton();
+                break;
+            default:
+                break;
+        }
+    }
+
 
     private static void printMainMenu() {
         System.out.println("\n/////////////////////////");
         System.out.println("/*      Main menu      */");
         System.out.println("/////////////////////////");
         System.out.println("1. Choisir un automate");
+        System.out.println("2. Afficher l'automate");
         System.out.println("2. Quitter");
         System.out.print("Faites votre choix : ");
     }

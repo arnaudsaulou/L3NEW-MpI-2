@@ -15,8 +15,8 @@ public class FileManager {
     //endregion
 
     //region Utils
-    public void loadFile(String automatonNumber, Automaton automaton) {
-        this.openFile("./res/L3NEW_MpI_2_" + automatonNumber + ".txt", automaton);
+    public Automaton loadFile(String automatonNumber) {
+        return this.openFile("./res/L3NEW_MpI_2_" + automatonNumber + ".txt");
     }
 
     public String[] openFolder() {
@@ -24,25 +24,35 @@ public class FileManager {
         return repository.list();
     }
 
-    private void openFile(String path, Automaton automaton) {
+    private Automaton openFile(String path) {
+
+        Automaton automaton = null;
 
         try {
             File currentFile = new File(path);
             this.scannerFileReader = new Scanner(currentFile);
 
             int lineCounter = 0;
+
+            int alphabetSize = 0;
+
             while (scannerFileReader.hasNextLine()) {
                 String line = scannerFileReader.nextLine();
 
                 try {
 
-                    //Extract the number of stats
+                    //Extract alphabet's size
                     if (lineCounter == 0) {
-                        automaton = new Automaton(Integer.parseInt(line));
+                        alphabetSize = Integer.parseInt(line);
+                    }
+
+                    //Extract the number of stats
+                    else if (lineCounter == 1) {
+                        automaton = new Automaton(alphabetSize, Integer.parseInt(line));
                     }
 
                     //Extract initial stats
-                    else if (lineCounter == 1) {
+                    else if (lineCounter == 2 && automaton != null) {
                         String[] initialStats = line.split(" ");
                         for (String stat : initialStats) {
                             automaton.addInitialStat(Integer.parseInt(stat));
@@ -50,7 +60,7 @@ public class FileManager {
                     }
 
                     //Extract terminal stats
-                    else if (lineCounter == 2) {
+                    else if (lineCounter == 3 && automaton != null) {
                         String[] terminalStats = line.split(" ");
                         for (String stat : terminalStats) {
                             automaton.addTerminalStat(Integer.parseInt(stat));
@@ -58,8 +68,12 @@ public class FileManager {
                     }
 
                     //Extract transitions
-                    else {
-
+                    else if (automaton != null) {
+                        String[] transition = line.split("");
+                        automaton.addTransition(
+                                Integer.parseInt(transition[0]),
+                                transition[1].charAt(0),
+                                Integer.parseInt(transition[2]));
                     }
 
                 } catch (NumberFormatException numberFormatException) {
@@ -74,6 +88,8 @@ public class FileManager {
         } catch (FileNotFoundException e) {
             System.err.println("Automate non trouvé");
         }
+
+        return automaton;
     }
 
     private void closeFile() {
