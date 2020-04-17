@@ -7,7 +7,7 @@ public class AutomatonManager {
 
     //region Variables
     private final FileManager fileManager;
-    private final HashMap<State, Character> missingTransitionToComplete;
+    private final HashMap<State, ArrayList<Character>> missingTransitionToComplete;
     //endregion
 
     //region Constructor
@@ -20,6 +20,10 @@ public class AutomatonManager {
     //region Utils
     protected Automaton chooseAutomaton(String automatonName) {
         return this.fileManager.loadFile(automatonName);
+    }
+
+    protected void printTransitionTable(Automaton automaton) {
+        automaton.printTransitionTable();
     }
 
     protected void printAutomaton(Automaton automaton) {
@@ -92,7 +96,7 @@ public class AutomatonManager {
             System.out.println("L'automate n'est pas complet a cause des transitions suivantes :");
 
             for (State state : this.missingTransitionToComplete.keySet()) {
-                System.out.println(String.valueOf(state.getStatsName()) + this.missingTransitionToComplete.get(state));
+                System.out.println("\t - " + String.valueOf(state.getStatsName()) + this.missingTransitionToComplete.get(state));
             }
         }
     }
@@ -104,7 +108,16 @@ public class AutomatonManager {
             for (Character symbol : automaton.getAlphabet()) {
                 if (state.getExitingEdges().get(symbol) == null) {
                     isFull = false;
-                    this.missingTransitionToComplete.put(state, symbol);
+
+                    if (this.missingTransitionToComplete.containsKey(state) &&
+                            !this.missingTransitionToComplete.get(state).contains(symbol)) {
+                        this.missingTransitionToComplete.get(state).add(symbol);
+                    } else {
+                        ArrayList<Character> missingTransitionList = new ArrayList<>();
+                        missingTransitionList.add(symbol);
+                        this.missingTransitionToComplete.put(state, missingTransitionList);
+                    }
+
                 }
             }
         }
@@ -112,6 +125,28 @@ public class AutomatonManager {
         return isFull;
     }
 
+    protected void completeAutomaton(Automaton automaton) {
+        if (this.isFull(automaton)) {
+            System.out.println("Cet automate est deja complet");
+        } else {
+            System.out.println("\n-------- Completion de l'automate --------\n");
 
+            System.out.println("\t - Ajout de l'état poubelle");
+            automaton.addTrashState();
+
+            String startingState, endingState = "P";
+
+            for (State missingTransitionState : this.missingTransitionToComplete.keySet()) {
+
+                for (Character transition : this.missingTransitionToComplete.get(missingTransitionState)) {
+                    startingState = missingTransitionState.getStatsName();
+                    automaton.addTransition(startingState, transition, endingState);
+                    System.out.println("\t - Ajout de la transition : " + startingState + transition + endingState);
+                }
+            }
+
+            this.missingTransitionToComplete.clear();
+        }
+    }
     //endregion
 }

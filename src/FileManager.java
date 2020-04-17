@@ -53,7 +53,7 @@ public class FileManager {
                     else if (lineCounter == 2 && automaton != null) {
                         String[] initialStats = line.split(" ");
                         for (String stat : initialStats) {
-                            automaton.addInitialStat(Integer.parseInt(stat));
+                            automaton.addInitialStat(stat);
                         }
                     }
 
@@ -61,7 +61,7 @@ public class FileManager {
                     else if (lineCounter == 3 && automaton != null) {
                         String[] terminalStats = line.split(" ");
                         for (String stat : terminalStats) {
-                            automaton.addTerminalStat(Integer.parseInt(stat));
+                            automaton.addTerminalStat(stat);
                         }
                     }
 
@@ -69,9 +69,9 @@ public class FileManager {
                     else if (automaton != null) {
                         String[] transition = line.split("");
                         automaton.addTransition(
-                                Integer.parseInt(transition[0]),
+                                transition[0],
                                 transition[1].charAt(0),
-                                Integer.parseInt(transition[2]));
+                                transition[2]);
                     }
 
                 } catch (NumberFormatException numberFormatException) {

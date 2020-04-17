@@ -7,7 +7,7 @@ public class Automaton {
 
     //region Variables
     private final ArrayList<Character> alphabet;
-    private final HashMap<Integer, State> statsList;
+    private final HashMap<String, State> statsList;
     private boolean isAsynchronous;
     private final ArrayList<String> asynchronousTransitions;
     private final ArrayList<String> nonDeterministicTransitions;
@@ -30,26 +30,28 @@ public class Automaton {
             this.alphabet.add((char) ('a' + i));
         }
 
+        String stateName;
         for (int i = 0; i < numberOfStats; i++) {
-            this.statsList.put(i, new State(i));
+            stateName = String.valueOf(i);
+            this.statsList.put(stateName, new State(stateName));
         }
     }
     //endregion
 
     //region Utils
-    public void addInitialStat(int stat) {
+    public void addInitialStat(String stat) {
         this.statsList.get(stat).setEntry(true);
         this.initialStatsList.add(this.statsList.get(stat));
     }
 
-    public void addTerminalStat(int stat) {
+    public void addTerminalStat(String stat) {
         this.statsList.get(stat).setExit(true);
         this.terminalStatsList.add(this.statsList.get(stat));
     }
 
-    public void addTransition(int startingStateInt, char transition, int endingStateInt) {
-        State startingState = this.statsList.get(startingStateInt);
-        State endingState = this.statsList.get(endingStateInt);
+    public void addTransition(String startingStateString, char transition, String endingStateSting) {
+        State startingState = this.statsList.get(startingStateString);
+        State endingState = this.statsList.get(endingStateSting);
 
         try {
             startingState.addExitingEdge(endingState, transition);
@@ -59,7 +61,7 @@ public class Automaton {
 
         if (transition == '*') {
             this.isAsynchronous = true;
-            this.asynchronousTransitions.add(startingStateInt + String.valueOf(transition) + endingStateInt);
+            this.asynchronousTransitions.add(startingStateString + transition + endingStateSting);
         }
 
     }
@@ -78,7 +80,7 @@ public class Automaton {
         return endingStatesListString;
     }
 
-    private void printStateHeader(StringBuilder stringBuilder, Integer stats) {
+    private void printStateHeader(StringBuilder stringBuilder, String stats) {
 
         int offset = 4;
 
@@ -104,6 +106,23 @@ public class Automaton {
             stringBuilder.append(String.format("%7s", transitions));
         }
     }
+
+    public void addState(State newState) {
+        this.statsList.put(newState.getStatsName(), newState);
+    }
+
+    public void removeState(String stateNumber) {
+        this.statsList.remove(stateNumber);
+    }
+
+    public void addTrashState() {
+        this.addState(new State("P"));
+
+        for (Character transition : this.alphabet) {
+            this.addTransition("P", transition, "P");
+        }
+    }
+
     //endregion
 
     //region Getter
@@ -115,40 +134,35 @@ public class Automaton {
         return this.isAsynchronous;
     }
 
-    public HashMap<Integer, State> getStatsList() {
-        return statsList;
+    public HashMap<String, State> getStatsList() {
+        return this.statsList;
     }
 
     public ArrayList<State> getInitialStatsList() {
-        return initialStatsList;
+        return this.initialStatsList;
     }
 
     public ArrayList<State> getTerminalStatsList() {
-        return terminalStatsList;
+        return this.terminalStatsList;
     }
 
     public ArrayList<String> getNonDeterministicTransitions() {
-        return nonDeterministicTransitions;
+        return this.nonDeterministicTransitions;
     }
 
     public ArrayList<Character> getAlphabet() {
-        return alphabet;
+        return this.alphabet;
     }
 
-    //endregion
-
-    //region Override
-    @Override
-    public String toString() {
-
-        System.out.println("\n-------- Table des transitions --------\n");
-
+    public void printTransitionTable() {
         StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append("\n-------- Table des transitions --------\n\n");
 
         this.printAlphabetHeader(stringBuilder);
 
         //Browse state
-        for (Integer stats : this.statsList.keySet()) {
+        for (String stats : this.statsList.keySet()) {
 
             this.printStateHeader(stringBuilder, stats);
 
@@ -160,7 +174,15 @@ public class Automaton {
             }
         }
 
-        return stringBuilder.toString();
+        System.out.println(stringBuilder.toString());
+    }
+
+    //endregion
+
+    //region Override
+    @Override
+    public String toString() {
+        return "";
     }
     //endregion
 }

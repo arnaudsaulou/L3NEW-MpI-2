@@ -4,7 +4,7 @@ public class Main {
 
     //region Constants
     private final static String EXITING_OPTION_AUTOMATON_NULL = "2";
-    private final static String EXITING_OPTION_AUTOMATON_NON_NULL = "6";
+    private final static String EXITING_OPTION_AUTOMATON_NON_NULL = "7";
     //endregion
 
     //region Variables
@@ -49,7 +49,7 @@ public class Main {
                 break;
             case "2":
                 if (automaton != null) {
-                    automatonManager.printAutomaton(automaton);
+                    automatonManager.printTransitionTable(automaton);
                 }
                 break;
             case "3":
@@ -63,11 +63,14 @@ public class Main {
             case "5":
                 automatonManager.checkIfAutomatonIsFull(automaton);
                 break;
+
+            case "6":
+                automatonManager.completeAutomaton(automaton);
+                break;
             default:
                 break;
         }
     }
-
 
     private static void printMainMenu() {
         System.out.println("\n/////////////////////////");
@@ -81,7 +84,8 @@ public class Main {
             System.out.println("3. Is async");
             System.out.println("4. Is determinist");
             System.out.println("5. Is full");
-            System.out.println("6. Quitter");
+            System.out.println("6. Complete");
+            System.out.println("7. Quitter");
         } else {
             System.out.println("2. Quitter");
         }
@@ -95,6 +99,11 @@ public class Main {
             System.out.println("\t" + "- " + (i + 1) + ") " + repositoryContent[i].replace(".txt", ""));
         }
         System.out.print("Votre selection : ");
+    }
+
+    private static String readWordFromUserInput(){
+        System.out.print("Entrer le mot à reconnaitre : ");
+        return keyboard.nextLine();
     }
     //endregion
 }

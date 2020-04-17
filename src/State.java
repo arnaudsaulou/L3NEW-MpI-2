@@ -6,14 +6,14 @@ import java.util.HashMap;
 public class State {
 
     //region Variables
-    private final int statsName;
+    private final String statsName;
     private boolean isEntry;
     private boolean isExit;
     private final HashMap<Character, ArrayList<State>> exitingEdges;
     //endregion
 
     //region Constructor
-    public State(int statsName) {
+    public State(String statsName) {
         this.statsName = statsName;
         this.exitingEdges = new HashMap<>();
     }
@@ -23,7 +23,7 @@ public class State {
     protected void addExitingEdge(State endingStat, char transition) throws NonDeterministicTransition {
         if (this.exitingEdges.containsKey(transition)) {
             this.exitingEdges.get(transition).add(endingStat);
-            throw new NonDeterministicTransition(this.statsName + String.valueOf(transition) + endingStat.getStatsName());
+            throw new NonDeterministicTransition(this.statsName + transition + endingStat.getStatsName());
         } else {
             ArrayList<State> newEndingStatesList = new ArrayList<>();
             newEndingStatesList.add(endingStat);
@@ -48,20 +48,20 @@ public class State {
     //endregion
 
     //region Getter
-    public int getStatsName() {
-        return statsName;
+    public String getStatsName() {
+        return this.statsName;
     }
 
     public HashMap<Character, ArrayList<State>> getExitingEdges() {
-        return exitingEdges;
+        return this.exitingEdges;
     }
 
     public boolean isEntry() {
-        return isEntry;
+        return this.isEntry;
     }
 
     public boolean isExit() {
-        return isExit;
+        return this.isExit;
     }
     //endregion
 }
