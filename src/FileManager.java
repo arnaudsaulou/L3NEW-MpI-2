@@ -31,9 +31,7 @@ public class FileManager {
         try {
             File currentFile = new File(path);
             this.scannerFileReader = new Scanner(currentFile);
-
             int lineCounter = 0;
-
             int alphabetSize = 0;
 
             while (scannerFileReader.hasNextLine()) {

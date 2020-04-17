@@ -1,13 +1,15 @@
+import exceptions.NonDeterministicTransition;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class State {
 
     //region Variables
-    private int statsName;
+    private final int statsName;
     private boolean isEntry;
     private boolean isExit;
-    private HashMap<Character, ArrayList<State>> exitingEdges;
+    private final HashMap<Character, ArrayList<State>> exitingEdges;
     //endregion
 
     //region Constructor
@@ -17,9 +19,11 @@ public class State {
     }
     //endregion
 
-    protected void addExitingEdge(State endingStat, char transition) {
-        if(this.exitingEdges.containsKey(transition)){
+    //region Utils
+    protected void addExitingEdge(State endingStat, char transition) throws NonDeterministicTransition {
+        if (this.exitingEdges.containsKey(transition)) {
             this.exitingEdges.get(transition).add(endingStat);
+            throw new NonDeterministicTransition(this.statsName + String.valueOf(transition) + endingStat.getStatsName());
         } else {
             ArrayList<State> newEndingStatesList = new ArrayList<>();
             newEndingStatesList.add(endingStat);
@@ -27,9 +31,11 @@ public class State {
         }
     }
 
-    public HashMap<Character, ArrayList<State>> getExitingEdges() {
-        return exitingEdges;
+    protected ArrayList<State> getSuccessorWithGivenTransition(char transition) {
+        return this.getExitingEdges().get(transition);
     }
+
+    //endregion
 
     //region Setter
     public void setEntry(boolean entry) {
@@ -46,6 +52,10 @@ public class State {
         return statsName;
     }
 
+    public HashMap<Character, ArrayList<State>> getExitingEdges() {
+        return exitingEdges;
+    }
+
     public boolean isEntry() {
         return isEntry;
     }
@@ -53,6 +63,5 @@ public class State {
     public boolean isExit() {
         return isExit;
     }
-
     //endregion
 }

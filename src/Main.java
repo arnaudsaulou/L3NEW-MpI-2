@@ -2,9 +2,15 @@ import java.util.Scanner;
 
 public class Main {
 
+    //region Constants
+    private final static String EXITING_OPTION_AUTOMATON_NULL = "2";
+    private final static String EXITING_OPTION_AUTOMATON_NON_NULL = "6";
+    //endregion
+
     //region Variables
     private static Scanner keyboard;
     private static FileManager fileManager;
+    private static Automaton automaton;
     private static AutomatonManager automatonManager;
     //endregion
 
@@ -25,18 +31,37 @@ public class Main {
             printMainMenu();
             answers = keyboard.nextLine();
             handleUserChoice(answers);
-        } while (!answers.equals("3"));
+        } while (loopDependingOnAutomatonValue(answers));
+
+    }
+
+    private static boolean loopDependingOnAutomatonValue(String answers) {
+        return (automaton != null && !answers.equals(EXITING_OPTION_AUTOMATON_NON_NULL)) ||
+                (automaton == null && !answers.equals(EXITING_OPTION_AUTOMATON_NULL));
     }
 
     private static void handleUserChoice(String answers) {
 
-        switch (answers){
+        switch (answers) {
             case "1":
                 printAutomatonSelectionMenu();
-                automatonManager.chooseAutomaton(keyboard.nextLine());
+                automaton = automatonManager.chooseAutomaton(keyboard.nextLine());
                 break;
             case "2":
-                automatonManager.printAutomaton();
+                if (automaton != null) {
+                    automatonManager.printAutomaton(automaton);
+                }
+                break;
+            case "3":
+                automatonManager.checkIfAutomatonAsynchronous(automaton);
+                break;
+
+            case "4":
+                automatonManager.checkIfAutomatonDeterministic(automaton);
+                break;
+
+            case "5":
+                automatonManager.checkIfAutomatonIsFull(automaton);
                 break;
             default:
                 break;
@@ -49,8 +74,17 @@ public class Main {
         System.out.println("/*      Main menu      */");
         System.out.println("/////////////////////////");
         System.out.println("1. Choisir un automate");
-        System.out.println("2. Afficher l'automate");
-        System.out.println("2. Quitter");
+
+        //Change option depending on automaton value
+        if (automaton != null) {
+            System.out.println("2. Afficher l'automate");
+            System.out.println("3. Is async");
+            System.out.println("4. Is determinist");
+            System.out.println("5. Is full");
+            System.out.println("6. Quitter");
+        } else {
+            System.out.println("2. Quitter");
+        }
         System.out.print("Faites votre choix : ");
     }
 
