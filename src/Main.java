@@ -1,10 +1,14 @@
+import classes.Automaton;
+import classes.AutomatonManager;
+import classes.FileManager;
+
 import java.util.Scanner;
 
 public class Main {
 
     //region Constants
     private final static String EXITING_OPTION_AUTOMATON_NULL = "2";
-    private final static String EXITING_OPTION_AUTOMATON_NON_NULL = "7";
+    private final static String EXITING_OPTION_AUTOMATON_NON_NULL = "8";
     //endregion
 
     //region Variables
@@ -67,6 +71,10 @@ public class Main {
             case "6":
                 automatonManager.completeAutomaton(automaton);
                 break;
+
+            case "7":
+                automatonManager.determineAutomaton(automaton);
+                break;
             default:
                 break;
         }
@@ -85,7 +93,8 @@ public class Main {
             System.out.println("4. Is determinist");
             System.out.println("5. Is full");
             System.out.println("6. Complete");
-            System.out.println("7. Quitter");
+            System.out.println("7. Determin");
+            System.out.println("8. Quitter");
         } else {
             System.out.println("2. Quitter");
         }

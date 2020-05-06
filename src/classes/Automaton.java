@@ -1,7 +1,10 @@
-import exceptions.NonDeterministicTransition;
+package classes;
+
+import exceptions.NonDeterministicTransitionException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class Automaton {
 
@@ -9,8 +12,9 @@ public class Automaton {
     private final ArrayList<Character> alphabet;
     private final HashMap<String, State> statsList;
     private boolean isAsynchronous;
-    private final ArrayList<String> asynchronousTransitions;
-    private final ArrayList<String> nonDeterministicTransitions;
+    private final ArrayList<Transition> asynchronousTransitions;
+    private final ArrayList<Transition> nonDeterministicTransitions;
+    private final HashMap<State, ArrayList<Character>> missingTransitionToComplete;
     private final ArrayList<State> initialStatsList;
     private final ArrayList<State> terminalStatsList;
 
@@ -23,6 +27,7 @@ public class Automaton {
         this.isAsynchronous = false;
         this.asynchronousTransitions = new ArrayList<>();
         this.nonDeterministicTransitions = new ArrayList<>();
+        this.missingTransitionToComplete = new HashMap<>();
         this.initialStatsList = new ArrayList<>();
         this.terminalStatsList = new ArrayList<>();
 
@@ -36,12 +41,28 @@ public class Automaton {
             this.statsList.put(stateName, new State(stateName));
         }
     }
+
+    public Automaton(int alphabetSize) {
+        this.alphabet = new ArrayList<>();
+        this.statsList = new HashMap<>();
+        this.isAsynchronous = false;
+        this.asynchronousTransitions = new ArrayList<>();
+        this.nonDeterministicTransitions = new ArrayList<>();
+        this.missingTransitionToComplete = new HashMap<>();
+        this.initialStatsList = new ArrayList<>();
+        this.terminalStatsList = new ArrayList<>();
+
+        for (int i = 0; i < alphabetSize; i++) {
+            this.alphabet.add((char) ('a' + i));
+        }
+    }
     //endregion
 
     //region Utils
-    public void addInitialStat(String stat) {
-        this.statsList.get(stat).setEntry(true);
-        this.initialStatsList.add(this.statsList.get(stat));
+    public void addInitialStat(String stateName) {
+        State state = this.statsList.get(stateName);
+        state.setEntry(true);
+        this.initialStatsList.add(state);
     }
 
     public void addTerminalStat(String stat) {
@@ -55,13 +76,17 @@ public class Automaton {
 
         try {
             startingState.addExitingEdge(endingState, transition);
-        } catch (NonDeterministicTransition nonDeterministicTransition) {
-            this.nonDeterministicTransitions.add(nonDeterministicTransition.getMessage());
+        } catch (NonDeterministicTransitionException nonDeterministicTransitionException) {
+            /*this.nonDeterministicTransitions.addAll(
+                    nonDeterministicTransitionException.getNonDeterministicTransition()
+            );*/
         }
 
         if (transition == '*') {
             this.isAsynchronous = true;
-            this.asynchronousTransitions.add(startingStateString + transition + endingStateSting);
+            this.asynchronousTransitions.add(
+                    new Transition(startingState, transition, endingState)
+            );
         }
 
     }
@@ -71,8 +96,12 @@ public class Automaton {
         ArrayList<State> endingStates = endingStatesHashMap.get(transition);
 
         if (endingStates != null) {
-            for (State endingState : endingStates) {
-                endingStatesListString.append(endingState.getStatsName());
+            Iterator<State> stateIterator = endingStates.iterator();
+            while (stateIterator.hasNext()) {
+                endingStatesListString.append(stateIterator.next().getStatsName());
+                if(stateIterator.hasNext()) {
+                    endingStatesListString.append(",");
+                }
             }
         } else {
             endingStatesListString.append(String.format("%7s", "-"));
@@ -123,37 +152,6 @@ public class Automaton {
         }
     }
 
-    //endregion
-
-    //region Getter
-    public ArrayList<String> getAsynchronousTransitions() {
-        return this.asynchronousTransitions;
-    }
-
-    public boolean isAsynchronous() {
-        return this.isAsynchronous;
-    }
-
-    public HashMap<String, State> getStatsList() {
-        return this.statsList;
-    }
-
-    public ArrayList<State> getInitialStatsList() {
-        return this.initialStatsList;
-    }
-
-    public ArrayList<State> getTerminalStatsList() {
-        return this.terminalStatsList;
-    }
-
-    public ArrayList<String> getNonDeterministicTransitions() {
-        return this.nonDeterministicTransitions;
-    }
-
-    public ArrayList<Character> getAlphabet() {
-        return this.alphabet;
-    }
-
     public void printTransitionTable() {
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -175,6 +173,45 @@ public class Automaton {
         }
 
         System.out.println(stringBuilder.toString());
+    }
+
+    public void clearInitialStateList() {
+        this.initialStatsList.clear();
+    }
+
+    //endregion
+
+    //region Getter
+    public ArrayList<Transition> getAsynchronousTransitions() {
+        return this.asynchronousTransitions;
+    }
+
+    public boolean isAsynchronous() {
+        return this.isAsynchronous;
+    }
+
+    public HashMap<String, State> getStatsList() {
+        return this.statsList;
+    }
+
+    public ArrayList<State> getInitialStatsList() {
+        return this.initialStatsList;
+    }
+
+    public ArrayList<State> getTerminalStatsList() {
+        return this.terminalStatsList;
+    }
+
+    public ArrayList<Transition> getNonDeterministicTransitions() {
+        return this.nonDeterministicTransitions;
+    }
+
+    public ArrayList<Character> getAlphabet() {
+        return this.alphabet;
+    }
+
+    public HashMap<State, ArrayList<Character>> getMissingTransitionToComplete() {
+        return this.missingTransitionToComplete;
     }
 
     //endregion
