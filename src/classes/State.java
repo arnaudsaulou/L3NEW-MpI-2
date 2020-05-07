@@ -12,44 +12,38 @@ public class State {
     protected String statsName;
     protected boolean isEntry;
     protected boolean isExit;
-    protected boolean isAlreadyVisited;
+    protected boolean isNeverVisited;
+    protected boolean isComposingState;
     protected final HashMap<Character, ArrayList<State>> exitingEdges;
     //endregion
 
     //region Constructor
     public State(String statsName) {
+        this.isNeverVisited = true;
         this.statsName = statsName;
         this.exitingEdges = new HashMap<>();
     }
     //endregion
 
     //region Utils
-    protected void addExitingEdge(State endingStat, char transition) throws NonDeterministicTransitionException {
-        if (this.exitingEdges.containsKey(transition)) {
-            if (!this.exitingEdges.get(transition).contains(endingStat)) {
-                this.exitingEdges.get(transition).add(endingStat);
-                throw new NonDeterministicTransitionException(this, transition, endingStat, this.exitingEdges.get(transition));
+    protected void addExitingEdge(State endingStat, char symbol) throws NonDeterministicTransitionException {
+        //If a transaction already exist with this symbol
+        if (this.exitingEdges.containsKey(symbol)) {
+
+            //If the endingStat is not already in the exitingEdges list
+            if (!this.exitingEdges.get(symbol).contains(endingStat)) {
+                this.exitingEdges.get(symbol).add(endingStat);
+                throw new NonDeterministicTransitionException(this, symbol, endingStat, this.exitingEdges.get(symbol));
             }
         } else {
             ArrayList<State> newEndingStatesList = new ArrayList<>();
             newEndingStatesList.add(endingStat);
-            this.exitingEdges.put(transition, newEndingStatesList);
+            this.exitingEdges.put(symbol, newEndingStatesList);
         }
-    }
-
-    protected void removeExitingEdge(char transition) {
-        this.exitingEdges.remove(transition);
     }
 
     protected ArrayList<State> getSuccessorWithGivenSymbol(char symbol) {
         return this.getExitingEdges().getOrDefault(symbol, null);
-    }
-
-    protected State clone() {
-        State copyState = new State(this.statsName);
-        copyState.isExit = this.isExit;
-        copyState.isEntry = this.isEntry;
-        return copyState;
     }
 
     //endregion
@@ -63,8 +57,12 @@ public class State {
         this.isExit = exit;
     }
 
-    public void setAlreadyVisited() {
-        this.isAlreadyVisited = true;
+    public void setNeverVisited(boolean neverVisited) {
+        isNeverVisited = neverVisited;
+    }
+
+    public void setComposingState(boolean composingState) {
+        isComposingState = composingState;
     }
 
     //endregion
@@ -86,11 +84,17 @@ public class State {
         return this.isExit;
     }
 
-    public boolean isAlreadyVisited() {
-        return this.isAlreadyVisited;
+    public boolean isNeverVisited() {
+        return this.isNeverVisited;
     }
+
+    public boolean isComposingState() {
+        return this.isComposingState;
+    }
+
     //endregion
 
+    //region Override
 
     @Override
     public boolean equals(Object o) {
@@ -110,5 +114,6 @@ public class State {
         return this.statsName;
     }
 
+    //endregion
 
 }

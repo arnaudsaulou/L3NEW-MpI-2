@@ -63,7 +63,7 @@ public class AutomatonManager {
 
             }
         } catch (TooMuchInitialStatsException tooMuchInitialStatsException) {
-            System.out.print("L'automate est deterministe car : ");
+            System.out.print("L'automate n'est pas deterministe car : ");
             System.out.println(tooMuchInitialStatsException.getMessage());
         }
 
@@ -163,11 +163,17 @@ public class AutomatonManager {
 
             //Make sur all states have been checked
             for (State currentState : automaton.getStatsList().values()) {
-                if (!currentState.isAlreadyVisited()) {
+                if (currentState.isNeverVisited() && !currentState.isComposingState()) {
                     deterministAutomaton.addState(currentState);
                     this.determineAutomatonRecursively(currentState, automaton, deterministAutomaton, true);
                 }
             }
+
+
+/*
+            deterministAutomaton.addState(automaton.getStatsList().get("0"));
+            this.determineAutomatonRecursively(automaton.getStatsList().get("0"), automaton, deterministAutomaton, true);*/
+
 
         }
 
@@ -214,8 +220,8 @@ public class AutomatonManager {
 
     private void determineAutomatonRecursively(State currentState, Automaton automaton, Automaton deterministAutomaton, boolean copyEntry) {
 
-        if (!currentState.isAlreadyVisited()) {
-            currentState.setAlreadyVisited();
+        if (currentState.isNeverVisited()) {
+            currentState.setNeverVisited(false);
 
             //Variable declaration
             ArrayList<State> successorsCreated = new ArrayList<>();
@@ -245,7 +251,7 @@ public class AutomatonManager {
             //If there is more then one successor, creation of a ComposedState, else just add the current state
             // to the determinist automaton
             if (successors.size() > 1) {
-                newComposedState = this.constructComposedState(automaton, successors, copyEntry);
+                newComposedState = this.constructComposedState(automaton, successors);
 
                 //Add the newComposedState to the determinist automaton and to the list of successors created
                 deterministAutomaton.addState(newComposedState);
@@ -254,7 +260,7 @@ public class AutomatonManager {
 
                 //Make sure to remove entries on the newly created ComposedState if a new entry as been created before
                 // (see : determineAutomaton() )
-                if(!copyEntry) {
+                if (!copyEntry) {
                     successors.get(0).setEntry(false);
                 }
 
@@ -265,13 +271,14 @@ public class AutomatonManager {
         }
     }
 
-    private ComposedState constructComposedState(Automaton automaton, ArrayList<State> successors, boolean copyEntry) {
+    private ComposedState constructComposedState(Automaton automaton, ArrayList<State> successors) {
 
         //Create a new ComposedState
         ComposedState newComposedState = new ComposedState();
 
         //For each successors of the current state with the current symbol
         for (State successor : successors) {
+            successor.setComposingState(true);
 
             //Add the successor to the composing states list of the ComposedSate
             newComposedState.addComposingState(successor);

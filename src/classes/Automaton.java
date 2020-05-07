@@ -77,9 +77,9 @@ public class Automaton {
         try {
             startingState.addExitingEdge(endingState, transition);
         } catch (NonDeterministicTransitionException nonDeterministicTransitionException) {
-            /*this.nonDeterministicTransitions.addAll(
+            this.nonDeterministicTransitions.addAll(
                     nonDeterministicTransitionException.getNonDeterministicTransition()
-            );*/
+            );
         }
 
         if (transition == '*') {
@@ -104,14 +104,14 @@ public class Automaton {
                 }
             }
         } else {
-            endingStatesListString.append(String.format("%7s", "-"));
+            endingStatesListString.append(String.format("%9s", "-"));
         }
         return endingStatesListString;
     }
 
     private void printStateHeader(StringBuilder stringBuilder, String stats) {
 
-        int offset = 4;
+        int offset = 8;
 
         stringBuilder.append("\n\n");
 
@@ -129,19 +129,15 @@ public class Automaton {
     }
 
     private void printAlphabetHeader(StringBuilder stringBuilder) {
-        stringBuilder.append(String.format("%4s", ""));  //To align columns header with columns
+        stringBuilder.append(String.format("%8s", ""));  //To align columns header with columns
 
         for (Character transitions : this.alphabet) {
-            stringBuilder.append(String.format("%7s", transitions));
+            stringBuilder.append(String.format("%9s", transitions));
         }
     }
 
     public void addState(State newState) {
         this.statsList.put(newState.getStatsName(), newState);
-    }
-
-    public void removeState(String stateNumber) {
-        this.statsList.remove(stateNumber);
     }
 
     public void addTrashState() {
@@ -168,15 +164,11 @@ public class Automaton {
 
             for (Character transition : alphabet) {
                 StringBuilder endingStatesListString = this.constructStatesList(endingStatesHashMap, transition);
-                stringBuilder.append(String.format("%7s", endingStatesListString.toString()));
+                stringBuilder.append(String.format("%9s", endingStatesListString.toString()));
             }
         }
 
         System.out.println(stringBuilder.toString());
-    }
-
-    public void clearInitialStateList() {
-        this.initialStatsList.clear();
     }
 
     //endregion
