@@ -2,10 +2,17 @@ package classes;
 
 import exceptions.NonDeterministicTransitionException;
 import exceptions.TooMuchInitialStatsException;
+import exceptions.UnknownTransitionException;
 
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.*;
 
 public class AutomatonManager {
+
+    //region Constants
+    private static final String EMPTY_TAG = "vide";
+    //endregion
 
     //region Variables
     private final FileManager fileManager;
@@ -26,18 +33,16 @@ public class AutomatonManager {
         automaton.printTransitionTable();
     }
 
-    protected void printAutomaton(Automaton automaton) {
-        System.out.println(automaton);
-    }
-
     private boolean isAutomatonAsynchronous(Automaton automaton) {
         return automaton.isAsynchronous();
     }
 
-    public void checkIfAutomatonAsynchronous(Automaton automaton) {
+    public boolean checkIfAutomatonAsynchronous(Automaton automaton) {
         System.out.println("\n-------- Test asynchronite --------\n");
 
-        if (this.isAutomatonAsynchronous(automaton)) {
+        boolean isAutomatonAsynchronous = this.isAutomatonAsynchronous(automaton);
+
+        if (isAutomatonAsynchronous) {
             System.out.println("L'automate est asynchrone a cause des transitions suivantes :");
             for (Transition asyncTransition : automaton.getAsynchronousTransitions()) {
                 System.out.println("\t - " + asyncTransition);
@@ -45,14 +50,18 @@ public class AutomatonManager {
         } else {
             System.out.println("L'automate est synchrone");
         }
-
+        return isAutomatonAsynchronous;
     }
 
-    public void checkIfAutomatonDeterministic(Automaton automaton) {
+    public boolean checkIfAutomatonDeterministic(Automaton automaton) {
         System.out.println("\n-------- Test determinisation --------\n");
 
+        boolean isAutomatonDeterministic = false;
+
         try {
-            if (this.isDeterministic(automaton)) {
+            isAutomatonDeterministic = this.isDeterministic(automaton);
+
+            if (isAutomatonDeterministic) {
                 System.out.println("L'automate est deterministe");
             } else {
                 System.out.println("L'automate n'est pas deterministe a cause des transitions suivantes :");
@@ -66,6 +75,8 @@ public class AutomatonManager {
             System.out.print("L'automate n'est pas deterministe car : ");
             System.out.println(tooMuchInitialStatsException.getMessage());
         }
+
+        return isAutomatonDeterministic;
 
     }
 
@@ -87,10 +98,12 @@ public class AutomatonManager {
         return isDeterministic;
     }
 
-    public void checkIfAutomatonIsFull(Automaton automaton) {
+    public boolean checkIfAutomatonIsFull(Automaton automaton) {
         System.out.println("\n-------- Test complet --------\n");
 
-        if (this.isFull(automaton)) {
+        boolean isAutomatonFull = this.isFull(automaton);
+
+        if (isAutomatonFull) {
             System.out.println("L'automate est complet");
         } else {
             System.out.println("L'automate n'est pas complet a cause des transitions suivantes :");
@@ -99,6 +112,8 @@ public class AutomatonManager {
                 System.out.println("\t - " + state.getStatsName() + automaton.getMissingTransitionToComplete().get(state));
             }
         }
+
+        return isAutomatonFull;
     }
 
     private boolean isFull(Automaton automaton) {
@@ -140,7 +155,10 @@ public class AutomatonManager {
 
                 for (Character transition : automaton.getMissingTransitionToComplete().get(missingTransitionState)) {
                     startingState = missingTransitionState.getStatsName();
-                    automaton.addTransition(startingState, transition, endingState);
+                    try {
+                        automaton.addTransition(startingState, transition, endingState);
+                    } catch (UnknownTransitionException ignored) {
+                    }
                     System.out.println("\t - Ajout de la transition : " + startingState + transition + endingState);
                 }
             }
@@ -149,10 +167,12 @@ public class AutomatonManager {
         }
     }
 
-    public void determineAutomaton(Automaton automaton) {
+    public Automaton determineAutomaton(Automaton automaton) {
 
         //Create a new empty automaton based on the automaton
         Automaton deterministAutomaton = new Automaton(automaton.getAlphabet().size());
+        deterministAutomaton.setInitialStatsList(automaton.getInitialStatsList());
+        //TODO set others attributs
 
         State entryState = this.checkAndActIfTooMuchEntry(automaton, deterministAutomaton);
 
@@ -168,16 +188,11 @@ public class AutomatonManager {
                     this.determineAutomatonRecursively(currentState, automaton, deterministAutomaton, true);
                 }
             }
-
-
-/*
-            deterministAutomaton.addState(automaton.getStatsList().get("0"));
-            this.determineAutomatonRecursively(automaton.getStatsList().get("0"), automaton, deterministAutomaton, true);*/
-
-
         }
 
         deterministAutomaton.printTransitionTable();
+
+        return deterministAutomaton;
     }
 
     private State checkAndActIfTooMuchEntry(Automaton automaton, Automaton deterministAutomaton) {
@@ -218,17 +233,30 @@ public class AutomatonManager {
         return newComposedState;
     }
 
-    private void determineAutomatonRecursively(State currentState, Automaton automaton, Automaton deterministAutomaton, boolean copyEntry) {
+    private void determineAutomatonRecursively(State currentState, Automaton automaton, Automaton deterministAutomaton,
+                                               boolean copyEntry) {
 
         if (currentState.isNeverVisited()) {
             currentState.setNeverVisited(false);
 
             //Variable declaration
             ArrayList<State> successorsCreated = new ArrayList<>();
+            State successor;
 
             //For each symbol of the alphabet
             for (Character symbol : automaton.getAlphabet()) {
-                this.computeSuccessor(currentState, automaton, deterministAutomaton, successorsCreated, symbol, copyEntry);
+                successor = this.computeSuccessor(currentState, deterministAutomaton, successorsCreated, symbol, copyEntry);
+
+                if (successor != null) {
+                    if (currentState.getExitingEdges().get(symbol) != null) {
+                        currentState.getExitingEdges().get(symbol).clear();
+                        currentState.getExitingEdges().get(symbol).add(successor);
+                    } else {
+                        ArrayList<State> successors = new ArrayList<>();
+                        successors.add(successor);
+                        currentState.getExitingEdges().put(symbol, successors);
+                    }
+                }
             }
 
             for (State successorCreated : successorsCreated) {
@@ -237,9 +265,10 @@ public class AutomatonManager {
         }
     }
 
-    private void computeSuccessor(State currentState, Automaton automaton, Automaton deterministAutomaton,
-                                  ArrayList<State> successorsCreated, Character symbol, boolean copyEntry) {
+    private State computeSuccessor(State currentState, Automaton deterministAutomaton,
+                                   ArrayList<State> successorsCreated, Character symbol, boolean copyEntry) {
 
+        State successor = null;
         ComposedState newComposedState;
 
         //Get all successors of the current state
@@ -251,27 +280,33 @@ public class AutomatonManager {
             //If there is more then one successor, creation of a ComposedState, else just add the current state
             // to the determinist automaton
             if (successors.size() > 1) {
-                newComposedState = this.constructComposedState(automaton, successors);
+                newComposedState = this.constructComposedState(successors);
 
                 //Add the newComposedState to the determinist automaton and to the list of successors created
-                deterministAutomaton.addState(newComposedState);
-                successorsCreated.add(newComposedState);
+                successor = newComposedState;
             } else {
+                if (!successors.isEmpty()) {
 
-                //Make sure to remove entries on the newly created ComposedState if a new entry as been created before
-                // (see : determineAutomaton() )
-                if (!copyEntry) {
-                    successors.get(0).setEntry(false);
+                    //Make sure to remove entries on the newly created ComposedState if a new entry as been created before
+                    // (see : determineAutomaton() )
+                    if (!copyEntry) {
+                        successors.get(0).setEntry(false);
+                    }
+
+                    //Add the state to the determinist automaton and to the list of successors.
+                    successor = successors.get(0);
                 }
-
-                //Add the state to the determinist automaton and to the list of successors.
-                deterministAutomaton.addState(successors.get(0));
-                successorsCreated.add(successors.get(0));
             }
+            if (successor != null) {
+                deterministAutomaton.addState(successor);
+                successorsCreated.add(successor);
+            }
+
         }
+        return successor;
     }
 
-    private ComposedState constructComposedState(Automaton automaton, ArrayList<State> successors) {
+    private ComposedState constructComposedState(ArrayList<State> successors) {
 
         //Create a new ComposedState
         ComposedState newComposedState = new ComposedState();
@@ -284,37 +319,91 @@ public class AutomatonManager {
             newComposedState.addComposingState(successor);
 
             //Handle exiting edge og the newComposedState after adding a new composing state
-            this.linkExitingEdgeOfComposedState(automaton.getAlphabet(), newComposedState, successor);
+            //this.linkExitingEdgeOfComposedState(automaton.getAlphabet(), newComposedState, successor);
         }
         return newComposedState;
     }
 
-    private void linkExitingEdgeOfComposedState(ArrayList<Character> alphabet, ComposedState newComposedState, State successor) {
+    public Automaton createComplementaryAutomaton(Automaton automaton) {
 
-        //Variable declaration
-        ArrayList<State> successorsOfSuccessor;
+        for (State state : automaton.getStatsList().values()) {
+            state.reverseExit();
+        }
 
-        //For each symbol of the alphabet
-        for (Character symbolOfSuccessor : alphabet) {
+        return automaton;
+    }
 
-            //Get all successors of the state
-            successorsOfSuccessor = successor.getSuccessorWithGivenSymbol(symbolOfSuccessor);
+    public boolean wordRecognition(Automaton automaton, String word) {
+        try {
+            this.isDeterministic(automaton);
+        } catch (TooMuchInitialStatsException tooMuchInitialStatsException) {
+            determineAutomaton(automaton);
+        }
 
-            //If there is no successor then do nothing
-            if (successorsOfSuccessor != null) {
+        boolean recognized = true;
+        State start = automaton.getInitialStatsList().get(0);
 
-                //For each successors of the state with the current symbol
-                for (State successorOfSuccessor : successorsOfSuccessor) {
+        CharacterIterator letter = new StringCharacterIterator(word);
 
-                    //Try to add the edge from the newComposedState to the state, with the given symbol
-                    try {
-                        newComposedState.addExitingEdge(successorOfSuccessor, symbolOfSuccessor);
-                    } catch (NonDeterministicTransitionException ignored) {
-                    }
-
+        while (letter.current() != CharacterIterator.DONE && recognized) {
+            for (char transition : start.getExitingEdges().keySet()) {
+                if (letter.current() == transition) {
+                    start = start.getExitingEdges().get(letter.current()).get(0);
+                    break;
+                } else {
+                    recognized = false;
                 }
             }
+
+            letter.next();
+        }
+
+        System.out.println("Etats de sortis :" + start.getStatsName());
+
+        return (start.isExit() && (word.equals(EMPTY_TAG) || !start.isEntry()));
+    }
+
+    public void standardization(Automaton automaton) {
+
+        if (automaton.getInitialStatsList().size() > 1) {
+            State newState = new State("I");
+            automaton.addState(newState);
+            newState.setEntry(true);
+
+            for (State initialState : automaton.getInitialStatsList()) {
+                initialState.setEntry(false);
+
+                if (initialState.isExit() && !newState.isExit()) {
+                    newState.setExit(true);
+                    automaton.getTerminalStatsList().remove(initialState);
+                    automaton.getTerminalStatsList().add(newState);
+                }
+
+                for (char transition : initialState.getExitingEdges().keySet()) {
+
+                    if (newState.getExitingEdges().get(transition) != null) {
+
+                        for (State state : initialState.getExitingEdges().get(transition)) {
+                            if(!newState.getExitingEdges().get(transition).contains(state)){
+                                newState.getExitingEdges().get(transition).add(state);
+                            }
+                        }
+
+                    } else {
+                        newState.getExitingEdges().put(transition, new ArrayList<>(
+                                initialState.getExitingEdges().get(transition))
+                        );
+                    }
+                }
+
+            }
+
+            automaton.getInitialStatsList().clear();
+            automaton.getInitialStatsList().add(newState);
+
         }
     }
-    //endregion
+
+
+//endregion
 }

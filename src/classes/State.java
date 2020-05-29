@@ -2,9 +2,7 @@ package classes;
 
 import exceptions.NonDeterministicTransitionException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
+import java.util.*;
 
 public class State {
 
@@ -43,7 +41,27 @@ public class State {
     }
 
     protected ArrayList<State> getSuccessorWithGivenSymbol(char symbol) {
-        return this.getExitingEdges().getOrDefault(symbol, null);
+        if (this instanceof ComposedState) {
+            ComposedState composedState = (ComposedState) this;
+
+            Set<State> successors = new HashSet<>();
+
+            ArrayList<State> localSuccessor;
+            for (State composingState : composedState.getComposingStates().values()) {
+                localSuccessor = composingState.getSuccessorWithGivenSymbol(symbol);
+                if(localSuccessor != null) {
+                    successors.addAll(localSuccessor);
+                }
+            }
+            return new ArrayList<>(successors);
+
+        } else {
+            return this.getExitingEdges().getOrDefault(symbol, null);
+        }
+    }
+
+    public void reverseExit() {
+        this.isExit = !this.isExit;
     }
 
     //endregion

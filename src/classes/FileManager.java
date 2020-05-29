@@ -1,5 +1,8 @@
 package classes;
 
+import exceptions.NonExistingStateException;
+import exceptions.UnknownTransitionException;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
@@ -76,8 +79,9 @@ public class FileManager {
                                 transition[2]);
                     }
 
-                } catch (NumberFormatException numberFormatException) {
-                    System.err.println("Chargement de l'automate impossible, erreur de format de fichier. \n" + numberFormatException.getMessage());
+                } catch (NumberFormatException | NonExistingStateException | UnknownTransitionException exception) {
+                    System.err.println("Chargement de l'automate impossible, erreur de format de fichier. \n" +
+                            exception.getMessage() + "\n");
                 }
 
                 lineCounter++;

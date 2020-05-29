@@ -1,6 +1,8 @@
 package classes;
 
 import exceptions.NonDeterministicTransitionException;
+import exceptions.NonExistingStateException;
+import exceptions.UnknownTransitionException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +17,7 @@ public class Automaton {
     private final ArrayList<Transition> asynchronousTransitions;
     private final ArrayList<Transition> nonDeterministicTransitions;
     private final HashMap<State, ArrayList<Character>> missingTransitionToComplete;
-    private final ArrayList<State> initialStatsList;
+    private ArrayList<State> initialStatsList;
     private final ArrayList<State> terminalStatsList;
 
     //endregion
@@ -59,34 +61,47 @@ public class Automaton {
     //endregion
 
     //region Utils
-    public void addInitialStat(String stateName) {
+    public void addInitialStat(String stateName) throws NonExistingStateException {
         State state = this.statsList.get(stateName);
-        state.setEntry(true);
-        this.initialStatsList.add(state);
+        if (state != null) {
+            state.setEntry(true);
+            this.initialStatsList.add(state);
+        } else {
+            throw new NonExistingStateException("Etat inexistant : " + stateName);
+        }
     }
 
-    public void addTerminalStat(String stat) {
-        this.statsList.get(stat).setExit(true);
-        this.terminalStatsList.add(this.statsList.get(stat));
+    public void addTerminalStat(String stateName) throws NonExistingStateException {
+        State state = this.statsList.get(stateName);
+        if (state != null) {
+            state.setExit(true);
+            this.terminalStatsList.add(state);
+        } else {
+            throw new NonExistingStateException("Etat inexistant : " + stateName);
+        }
+
     }
 
-    public void addTransition(String startingStateString, char transition, String endingStateSting) {
+    public void addTransition(String startingStateString, char transition, String endingStateSting) throws UnknownTransitionException {
         State startingState = this.statsList.get(startingStateString);
         State endingState = this.statsList.get(endingStateSting);
 
-        try {
-            startingState.addExitingEdge(endingState, transition);
-        } catch (NonDeterministicTransitionException nonDeterministicTransitionException) {
-            this.nonDeterministicTransitions.addAll(
-                    nonDeterministicTransitionException.getNonDeterministicTransition()
-            );
-        }
+        if (this.getAlphabet().contains(transition)) {
 
-        if (transition == '*') {
+            try {
+                startingState.addExitingEdge(endingState, transition);
+            } catch (NonDeterministicTransitionException nonDeterministicTransitionException) {
+                this.nonDeterministicTransitions.addAll(
+                        nonDeterministicTransitionException.getNonDeterministicTransition()
+                );
+            }
+        } else if (transition == '*') {
             this.isAsynchronous = true;
             this.asynchronousTransitions.add(
                     new Transition(startingState, transition, endingState)
             );
+        } else {
+            throw new UnknownTransitionException("Transistion inconnue :" + transition);
         }
 
     }
@@ -99,7 +114,7 @@ public class Automaton {
             Iterator<State> stateIterator = endingStates.iterator();
             while (stateIterator.hasNext()) {
                 endingStatesListString.append(stateIterator.next().getStatsName());
-                if(stateIterator.hasNext()) {
+                if (stateIterator.hasNext()) {
                     endingStatesListString.append(",");
                 }
             }
@@ -144,7 +159,10 @@ public class Automaton {
         this.addState(new State("P"));
 
         for (Character transition : this.alphabet) {
-            this.addTransition("P", transition, "P");
+            try {
+                this.addTransition("P", transition, "P");
+            } catch (UnknownTransitionException ignored) {
+            }
         }
     }
 
@@ -208,10 +226,19 @@ public class Automaton {
 
     //endregion
 
+    //region Setter
+
+    public void setInitialStatsList(ArrayList<State> initialStatsList) {
+        this.initialStatsList = initialStatsList;
+    }
+
+    //endregion
+
     //region Override
     @Override
     public String toString() {
         return "";
     }
+
     //endregion
 }

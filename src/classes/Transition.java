@@ -16,20 +16,6 @@ public class Transition {
     }
     //endregion
 
-    //region Getter
-    public State getStartingState() {
-        return startingState;
-    }
-
-    public char getTransition() {
-        return transition;
-    }
-
-    public State getEndingState() {
-        return endingState;
-    }
-    //endregion
-
     //region Override
     @Override
     public String toString() {

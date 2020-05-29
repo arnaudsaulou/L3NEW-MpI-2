@@ -48,37 +48,101 @@ public class Main {
 
         switch (answers) {
             case "1":
-                printAutomatonSelectionMenu();
-                automaton = automatonManager.chooseAutomaton(keyboard.nextLine());
+                importAutomatonProcess();
                 break;
+
             case "2":
-                if (automaton != null) {
-                    automatonManager.printTransitionTable(automaton);
-                }
+                if (automaton != null)
+                    printTransitionTableProcess();
                 break;
+
             case "3":
-                automatonManager.checkIfAutomatonAsynchronous(automaton);
+                if (automaton != null)
+                    determinationAndCompletionProcess();
                 break;
 
             case "4":
-                automatonManager.checkIfAutomatonDeterministic(automaton);
+                if (automaton != null)
+                    minimizationProcess();
                 break;
 
             case "5":
-                automatonManager.checkIfAutomatonIsFull(automaton);
+                if (automaton != null)
+                    wordRecognitionProcess(automaton);
                 break;
 
             case "6":
-                automatonManager.completeAutomaton(automaton);
+                if (automaton != null)
+                    complementaryLanguageProcess();
                 break;
 
             case "7":
-                automatonManager.determineAutomaton(automaton);
+                if (automaton != null)
+                    standardizationProcess();
                 break;
+
             default:
                 break;
         }
     }
+
+    //region Process
+
+    private static void minimizationProcess() {
+        System.out.println("Coming soon !");
+    }
+
+    private static void standardizationProcess() {
+        automatonManager.standardization(automaton);
+        printTransitionTableProcess();
+    }
+
+    private static void wordRecognitionProcess(Automaton automaton) {
+        String word;
+        do {
+            word = readWordFromUserInput();
+            System.out.println(automatonManager.wordRecognition(automaton, word) ? "OUI" : "NON");
+        } while (!word.equals("fin"));
+    }
+
+    private static void complementaryLanguageProcess() {
+        determinationAndCompletionProcess();
+        Automaton complementaryAutomaton = automatonManager.createComplementaryAutomaton(automaton);
+        printTransitionTableProcess();
+        wordRecognitionProcess(complementaryAutomaton);
+
+        //To reverse the process and go back to the original automaton
+        automatonManager.createComplementaryAutomaton(automaton);
+    }
+
+    private static void determinationAndCompletionProcess() {
+        if (automatonManager.checkIfAutomatonAsynchronous(automaton)) {
+            //TODO Maybe one day
+        } else {
+            if (automatonManager.checkIfAutomatonDeterministic(automaton)) {
+                if (!automatonManager.checkIfAutomatonIsFull(automaton)) {
+                    automatonManager.completeAutomaton(automaton);
+                }
+            } else {
+                automaton = automatonManager.determineAutomaton(automaton);
+                automatonManager.completeAutomaton(automaton);
+            }
+        }
+        automatonManager.printTransitionTable(automaton);
+    }
+
+    private static void printTransitionTableProcess() {
+        automatonManager.printTransitionTable(automaton);
+    }
+
+    private static void importAutomatonProcess() {
+        printAutomatonSelectionMenu();
+        automaton = automatonManager.chooseAutomaton(keyboard.nextLine());
+    }
+
+    //endregion
+
+    //region Menu
 
     private static void printMainMenu() {
         System.out.println("\n/////////////////////////");
@@ -88,12 +152,12 @@ public class Main {
 
         //Change option depending on automaton value
         if (automaton != null) {
-            System.out.println("2. Afficher l'automate");
-            System.out.println("3. Is async");
-            System.out.println("4. Is determinist");
-            System.out.println("5. Is full");
-            System.out.println("6. Complete");
-            System.out.println("7. Determin");
+            System.out.println("2. Affichage de l’automate");
+            System.out.println("3. Déterminisation et complétion");
+            System.out.println("4. Minimisation");
+            System.out.println("5. Reconnaissance de mots");
+            System.out.println("6. Langage complémentaire");
+            System.out.println("7. Standardisation");
             System.out.println("8. Quitter");
         } else {
             System.out.println("2. Quitter");
@@ -110,7 +174,9 @@ public class Main {
         System.out.print("Votre selection : ");
     }
 
-    private static String readWordFromUserInput(){
+    //endregion
+
+    private static String readWordFromUserInput() {
         System.out.print("Entrer le mot à reconnaitre : ");
         return keyboard.nextLine();
     }
