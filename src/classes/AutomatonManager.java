@@ -172,7 +172,6 @@ public class AutomatonManager {
         //Create a new empty automaton based on the automaton
         Automaton deterministAutomaton = new Automaton(automaton.getAlphabet().size());
         deterministAutomaton.setInitialStatsList(automaton.getInitialStatsList());
-        //TODO set others attributs
 
         State entryState = this.checkAndActIfTooMuchEntry(automaton, deterministAutomaton);
 
@@ -260,7 +259,8 @@ public class AutomatonManager {
             }
 
             for (State successorCreated : successorsCreated) {
-                this.determineAutomatonRecursively(successorCreated, automaton, deterministAutomaton, copyEntry);
+                if (successorCreated != currentState)
+                    this.determineAutomatonRecursively(successorCreated, automaton, deterministAutomaton, copyEntry);
             }
         }
     }
@@ -269,7 +269,6 @@ public class AutomatonManager {
                                    ArrayList<State> successorsCreated, Character symbol, boolean copyEntry) {
 
         State successor = null;
-        ComposedState newComposedState;
 
         //Get all successors of the current state
         ArrayList<State> successors = currentState.getSuccessorWithGivenSymbol(symbol);
@@ -280,10 +279,10 @@ public class AutomatonManager {
             //If there is more then one successor, creation of a ComposedState, else just add the current state
             // to the determinist automaton
             if (successors.size() > 1) {
-                newComposedState = this.constructComposedState(successors);
 
                 //Add the newComposedState to the determinist automaton and to the list of successors created
-                successor = newComposedState;
+                successor = this.constructComposedState(successors);
+
             } else {
                 if (!successors.isEmpty()) {
 
@@ -297,9 +296,24 @@ public class AutomatonManager {
                     successor = successors.get(0);
                 }
             }
+
             if (successor != null) {
-                deterministAutomaton.addState(successor);
-                successorsCreated.add(successor);
+
+                //If the current state is composed
+                if (currentState instanceof ComposedState) {
+                    ComposedState currentStateComposed = (ComposedState) currentState;
+
+                    //Prevent the current composed state to loop on itself
+                    if (!successors.containsAll(currentStateComposed.getComposingStates().values())) {
+                        deterministAutomaton.addState(successor);
+                        successorsCreated.add(successor);
+                    }
+                }
+                //Else
+                else {
+                    deterministAutomaton.addState(successor);
+                    successorsCreated.add(successor);
+                }
             }
 
         }
@@ -384,7 +398,7 @@ public class AutomatonManager {
                     if (newState.getExitingEdges().get(transition) != null) {
 
                         for (State state : initialState.getExitingEdges().get(transition)) {
-                            if(!newState.getExitingEdges().get(transition).contains(state)){
+                            if (!newState.getExitingEdges().get(transition).contains(state)) {
                                 newState.getExitingEdges().get(transition).add(state);
                             }
                         }
