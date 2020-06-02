@@ -2,6 +2,8 @@ import classes.Automaton;
 import classes.AutomatonManager;
 import classes.FileManager;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Scanner;
 
 public class Main {
@@ -168,9 +170,11 @@ public class Main {
     private static void printAutomatonSelectionMenu() {
         System.out.println("\nChoisir un automate parmis la liste disponible :");
         String[] repositoryContent = fileManager.openFolder();
-        for (int i = 0; i < repositoryContent.length; i++) {
-            System.out.println("\t" + "- " + (i + 1) + ") " + repositoryContent[i].replace(".txt", ""));
+
+        for (String s : repositoryContent) {
+            System.out.println("\t" + "- " + s.replace(".txt", ""));
         }
+
         System.out.print("Votre selection : ");
     }
 

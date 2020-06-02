@@ -5,6 +5,8 @@ import exceptions.UnknownTransitionException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Scanner;
 
 public class FileManager {
@@ -21,12 +23,26 @@ public class FileManager {
 
     //region Utils
     public Automaton loadFile(String automatonNumber) {
-        return this.openFile("./res/L3NEW_MpI_2_" + automatonNumber + ".txt");
+        return this.openFile("./res/L3New_MpI_2_" + automatonNumber + ".txt");
     }
 
     public String[] openFolder() {
         File repository = new File("./res");
-        return repository.list();
+        String[] result = repository.list();
+
+        Arrays.sort(result, new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                o1 = o1.replace("L3New_MpI_2_", "");
+                o1 = o1.replace(".txt", "");
+                o2 = o2.replace("L3New_MpI_2_", "");
+                o2 = o2.replace(".txt", "");
+
+                return Integer.valueOf(o1).compareTo(Integer.valueOf(o2));
+            }
+        });
+
+        return result;
     }
 
     private Automaton openFile(String path) {
@@ -73,13 +89,14 @@ public class FileManager {
                     //Extract transitions
                     else if (automaton != null) {
                         String[] transition = line.split("");
+
                         automaton.addTransition(
                                 transition[0],
                                 transition[1].charAt(0),
                                 transition[2]);
                     }
 
-                } catch (NumberFormatException | NonExistingStateException | UnknownTransitionException exception) {
+                } catch (NumberFormatException | NonExistingStateException | UnknownTransitionException | ArrayIndexOutOfBoundsException exception) {
                     System.err.println("Chargement de l'automate impossible, erreur de format de fichier. \n" +
                             exception.getMessage() + "\n");
                 }
