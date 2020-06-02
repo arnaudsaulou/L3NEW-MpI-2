@@ -189,8 +189,6 @@ public class AutomatonManager {
             }
         }
 
-        deterministAutomaton.printTransitionTable();
-
         return deterministAutomaton;
     }
 
@@ -304,7 +302,8 @@ public class AutomatonManager {
                     ComposedState currentStateComposed = (ComposedState) currentState;
 
                     //Prevent the current composed state to loop on itself
-                    if (!successors.containsAll(currentStateComposed.getComposingStates().values())) {
+                    if (!successors.containsAll(currentStateComposed.getComposingStates().values()) &&
+                    !deterministAutomaton.getStatsList().containsKey(successor.getStatsName())) {
                         deterministAutomaton.addState(successor);
                         successorsCreated.add(successor);
                     }
@@ -332,8 +331,6 @@ public class AutomatonManager {
             //Add the successor to the composing states list of the ComposedSate
             newComposedState.addComposingState(successor);
 
-            //Handle exiting edge og the newComposedState after adding a new composing state
-            //this.linkExitingEdgeOfComposedState(automaton.getAlphabet(), newComposedState, successor);
         }
         return newComposedState;
     }
